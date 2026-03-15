@@ -5,11 +5,7 @@ import os
 # --- CONFIGURAÇÃO ---
 BASE_DIR = os.path.dirname(__file__)
 CSV_FILE = os.path.join(BASE_DIR, "db_ideia.csv")
-SENHA_ADMIN = os.getenv("ADMIN_PASSWORD")  # pega do ambiente, sem fallback
-
-if not SENHA_ADMIN:
-    st.error("⚠️ ADMIN_PASSWORD não está definido no ambiente do Streamlit.")
-    st.stop()
+SENHA_ADMIN = os.getenv("ADMIN_PASSWORD")  # senha do Streamlit Cloud
 
 # --- FUNÇÕES ---
 @st.cache_data
@@ -35,20 +31,23 @@ body {background-color: #0b0b0b; color: white; font-family: Arial, sans-serif;}
 st.title("📦 Sistema de Localização de Produtos")
 st.write("Busque, edite ou crie produtos facilmente.")
 
+# --- CARREGA DADOS ---
+df = carregar_dados()
+
 # --- CAMPO DE BUSCA ---
 q = st.text_input("Buscar por código ou nome:")
 
+resultado = pd.DataFrame()
 if q:
-    df = carregar_dados()
-    resultado = df[
-        (df["ID_PRODUTO"].astype(str) == q) |
-        (df["NOME_PRODUTO"].str.contains(q, case=False))
-    ]
+    if q.isdigit():  # busca por ID exato
+        resultado = df[df["ID_PRODUTO"].astype(str) == q]
+    else:  # busca por nome
+        resultado = df[df["NOME_PRODUTO"].str.contains(q, case=False)]
 
     if resultado.empty:
         st.warning("Produto não encontrado")
     else:
-        for _, row in resultado.iterrows():
+        for idx, row in resultado.iterrows():
             st.markdown(f"""
             <div class="card">
             <h2>{row['NOME_PRODUTO']}</h2>
@@ -81,36 +80,37 @@ if q:
                                 salvar_dados(df)
                                 st.success("Endereço atualizado com sucesso!")
 
-# --- CRIAR PRODUTO NOVO COM SENHA ---
-st.subheader("➕ Criar Produto Novo")
+# --- CRIAÇÃO DE ITEM NOVO ---
+st.markdown("---")
+st.header("➕ Criar novo produto")
 
-senha_novo = st.text_input("Digite a senha para criar novo produto:", type="password", key="senha_novo")
+senha_novo = st.text_input("Digite a senha para criar novo item:", type="password", key="senha_novo")
 if senha_novo:
     if senha_novo != SENHA_ADMIN:
         st.error("Senha incorreta")
     else:
-        st.success("Senha correta! Preencha os campos abaixo para criar o produto.")
+        st.success("Senha correta! Preencha os dados do novo produto.")
         with st.form("form_novo"):
-            id_produto = st.text_input("ID Produto", key="novo_id")
-            nome_produto = st.text_input("Nome Produto", key="novo_nome")
-            zona = st.text_input("Zona", key="novo_zona")
-            corredor = st.text_input("Corredor", key="novo_corredor")
-            fila = st.text_input("Fila", key="novo_fila")
-            posicao = st.text_input("Posição", key="novo_posicao")
+            novo_id = st.text_input("ID do Produto", key="novo_id")
+            novo_nome = st.text_input("Nome do Produto", key="novo_nome")
+            novo_zona = st.text_input("Zona", key="novo_zona")
+            novo_corredor = st.text_input("Corredor", key="novo_corredor")
+            novo_fila = st.text_input("Fila", key="novo_fila")
+            novo_posicao = st.text_input("Posição", key="novo_posicao")
             criar = st.form_submit_button("Criar Produto")
             if criar:
-                df = carregar_dados()
-                if int(id_produto) in df["ID_PRODUTO"].values:
-                    st.error("ID já existe! Escolha outro.")
+                if not (novo_id and novo_nome):
+                    st.error("ID e Nome são obrigatórios!")
+                elif novo_id in df["ID_PRODUTO"].astype(str).values:
+                    st.error("ID já existe!")
                 else:
-                    novo_item = pd.DataFrame([{
-                        "ID_PRODUTO": int(id_produto),
-                        "NOME_PRODUTO": nome_produto,
-                        "ZONA": zona,
-                        "CORREDOR": corredor,
-                        "FILA": fila,
-                        "POSICAO": posicao
-                    }])
-                    df = pd.concat([df, novo_item], ignore_index=True)
+                    df = pd.concat([df, pd.DataFrame([{
+                        "ID_PRODUTO": novo_id,
+                        "NOME_PRODUTO": novo_nome,
+                        "ZONA": novo_zona,
+                        "CORREDOR": novo_corredor,
+                        "FILA": novo_fila,
+                        "POSICAO": novo_posicao
+                    }])], ignore_index=True)
                     salvar_dados(df)
-                    st.success(f"Produto {nome_produto} criado com sucesso!")
+                    st.success(f"Produto {novo_nome} criado com sucesso!")
