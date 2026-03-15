@@ -5,7 +5,7 @@ import os
 # --- CONFIGURAÇÃO ---
 BASE_DIR = os.path.dirname(__file__)
 CSV_FILE = os.path.join(BASE_DIR, "db_ideia.csv")  # CSV na mesma pasta
-SENHA_ADMIN = st.secrets["ADMIN_PASSWORD"]
+SENHA_ADMIN = os.getenv("ADMIN_PASSWORD", "optec123")  # variável de ambiente ou fallback
 
 # --- FUNÇÕES ---
 @st.cache_data
@@ -79,7 +79,7 @@ if q:
             </div>
             """, unsafe_allow_html=True)
 
-            # Formulário de edição
+            # --- FORMULÁRIO DE EDIÇÃO ---
             with st.form(f"editar_{row['ID_PRODUTO']}"):
                 st.subheader("Atualizar endereço do produto")
                 zona = st.text_input("Zona", value=row['ZONA'], key=f"zona_{row['ID_PRODUTO']}")
@@ -87,7 +87,8 @@ if q:
                 fila = st.text_input("Fila", value=row['FILA'], key=f"fila_{row['ID_PRODUTO']}")
                 posicao = st.text_input("Posição", value=row['POSICAO'], key=f"posicao_{row['ID_PRODUTO']}")
                 senha = st.text_input("Senha", type="password", key=f"senha_{row['ID_PRODUTO']}")
-                atualizar = st.form_submit_button("Atualizar endereço")
+                
+                atualizar = st.form_submit_button("Atualizar endereço")  # Só atualiza ao clicar
 
                 if atualizar:
                     if senha != SENHA_ADMIN:
