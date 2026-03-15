@@ -2,12 +2,12 @@ import streamlit as st
 import pandas as pd
 import os
 
-# --- CONFIGURAÇÃO ---
+
 BASE_DIR = os.path.dirname(__file__)
 CSV_FILE = os.path.join(BASE_DIR, "db_ideia.csv")
 SENHA_ADMIN = os.getenv("ADMIN_PASSWORD", "optec123")  # fallback local
 
-# --- FUNÇÕES ---
+
 @st.cache_data
 def carregar_dados():
     return pd.read_csv(CSV_FILE)
@@ -27,12 +27,16 @@ body {background-color: #0b0b0b; color: white; font-family: Arial, sans-serif;}
 </style>
 """, unsafe_allow_html=True)
 
-# --- TÍTULO ---
-st.title("📦Ideia Endereçamento")
-st.write("Busque e edite.")
 
-# --- CAMPO DE BUSCA ---
-q = st.text_input("Buscar por código ou nome:")
+st.title("📦 Ideia Endereçamento 2026")
+st.write("Busque e edite endereços.")
+
+
+if "busca" not in st.session_state:
+    st.session_state.busca = ""
+
+
+q = st.text_input("Buscar por código ou nome:", key="busca")
 
 if q:
     df = carregar_dados()
@@ -41,11 +45,14 @@ if q:
         (df["NOME_PRODUTO"].str.contains(q, case=False))
     ]
 
+   
+    st.session_state.busca = ""
+
     if resultado.empty:
         st.warning("Produto não encontrado")
     else:
         for _, row in resultado.iterrows():
-            # --- EXIBE INFORMAÇÕES ---
+            
             st.markdown(f"""
             <div class="card">
             <h2>{row['NOME_PRODUTO']}</h2>
@@ -57,16 +64,16 @@ if q:
             </div>
             """, unsafe_allow_html=True)
 
-            # --- BOTÃO EDITAR ---
+           
             if st.button(f"Editar {row['ID_PRODUTO']}", key=f"editar_{row['ID_PRODUTO']}"):
-                # --- INPUT DE SENHA ---
+                
                 senha_input = st.text_input("Digite a senha para editar:", type="password", key=f"senha_{row['ID_PRODUTO']}")
                 if senha_input:
                     if senha_input != SENHA_ADMIN:
                         st.error("Senha incorreta")
                     else:
                         st.success("Senha correta! Agora você pode atualizar o endereço.")
-                        # --- FORMULÁRIO DE EDIÇÃO ---
+                       
                         with st.form(f"form_{row['ID_PRODUTO']}"):
                             zona = st.text_input("Zona", value=row['ZONA'], key=f"zona_{row['ID_PRODUTO']}")
                             corredor = st.text_input("Corredor", value=row['CORREDOR'], key=f"corredor_{row['ID_PRODUTO']}")
