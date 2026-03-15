@@ -29,7 +29,7 @@ body {background-color: #0b0b0b; color: white; font-family: Arial, sans-serif;}
 
 # --- TÍTULO ---
 st.title("📦 Sistema de Localização de Produtos")
-st.write("Busque, edite ou crie produtos facilmente.")
+st.write("Busque e edite produtos facilmente.")
 
 # --- CARREGA DADOS ---
 df = carregar_dados()
@@ -79,38 +79,3 @@ if q:
                                        zona, corredor, fila, posicao]
                                 salvar_dados(df)
                                 st.success("Endereço atualizado com sucesso!")
-
-# --- CRIAÇÃO DE ITEM NOVO ---
-st.markdown("---")
-st.header("➕ Criar novo produto")
-
-senha_novo = st.text_input("Digite a senha para criar novo item:", type="password", key="senha_novo")
-if senha_novo:
-    if senha_novo != SENHA_ADMIN:
-        st.error("Senha incorreta")
-    else:
-        st.success("Senha correta! Preencha os dados do novo produto.")
-        with st.form("form_novo"):
-            novo_id = st.text_input("ID do Produto", key="novo_id")
-            novo_nome = st.text_input("Nome do Produto", key="novo_nome")
-            novo_zona = st.text_input("Zona", key="novo_zona")
-            novo_corredor = st.text_input("Corredor", key="novo_corredor")
-            novo_fila = st.text_input("Fila", key="novo_fila")
-            novo_posicao = st.text_input("Posição", key="novo_posicao")
-            criar = st.form_submit_button("Criar Produto")
-            if criar:
-                if not (novo_id and novo_nome):
-                    st.error("ID e Nome são obrigatórios!")
-                elif novo_id in df["ID_PRODUTO"].astype(str).values:
-                    st.error("ID já existe!")
-                else:
-                    df = pd.concat([df, pd.DataFrame([{
-                        "ID_PRODUTO": novo_id,
-                        "NOME_PRODUTO": novo_nome,
-                        "ZONA": novo_zona,
-                        "CORREDOR": novo_corredor,
-                        "FILA": novo_fila,
-                        "POSICAO": novo_posicao
-                    }])], ignore_index=True)
-                    salvar_dados(df)
-                    st.success(f"Produto {novo_nome} criado com sucesso!")
