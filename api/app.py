@@ -4,7 +4,8 @@ import os
 
 app = Flask(__name__)
 
-CSV_FILE = os.path.join(os.getcwd(), "db_ideia.csv")
+BASE_DIR = os.path.dirname(__file__)
+CSV_FILE = os.path.join(BASE_DIR, "../db_ideia.csv")
 
 # senha vem do Vercel
 SENHA_ADMIN = os.getenv("ADMIN_PASSWORD")
