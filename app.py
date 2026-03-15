@@ -4,8 +4,8 @@ import os
 
 # --- CONFIGURAÇÃO ---
 BASE_DIR = os.path.dirname(__file__)
-CSV_FILE = os.path.join(BASE_DIR, "db_ideia.csv")  # CSV na mesma pasta
-SENHA_ADMIN = os.getenv("ADMIN_PASSWORD", "optec123")  # variável de ambiente ou fallback
+CSV_FILE = os.path.join(BASE_DIR, "db_ideia.csv")
+SENHA_ADMIN = os.getenv("ADMIN_PASSWORD", "optec123")  # fallback local
 
 # --- FUNÇÕES ---
 @st.cache_data
@@ -19,34 +19,11 @@ def salvar_dados(df):
 st.set_page_config(page_title="Sistema de Estoque", layout="wide")
 st.markdown("""
 <style>
-body {
-    background-color: #0b0b0b;
-    color: white;
-    font-family: Arial, sans-serif;
-}
-.stTextInput>div>div>input {
-    background-color: #1a1a1a;
-    color: white;
-    border-radius: 6px;
-    padding: 10px;
-}
-.stButton>button {
-    background-color: #ff7a00;
-    color: black;
-    font-weight: bold;
-    border-radius: 6px;
-    padding: 10px 20px;
-}
-.stButton>button:hover {
-    background-color: #ff8c1a;
-}
-.card {
-    background-color: #161616;
-    padding: 20px;
-    margin-top: 20px;
-    border-radius: 10px;
-    border-left: 5px solid #ff7a00;
-}
+body {background-color: #0b0b0b; color: white; font-family: Arial, sans-serif;}
+.stTextInput>div>div>input {background-color: #1a1a1a; color: white; border-radius:6px; padding:10px;}
+.stButton>button {background-color:#ff7a00; color:black; font-weight:bold; border-radius:6px; padding:10px 20px;}
+.stButton>button:hover {background-color:#ff8c1a;}
+.card {background-color:#161616; padding:20px; margin-top:20px; border-radius:10px; border-left:5px solid #ff7a00;}
 </style>
 """, unsafe_allow_html=True)
 
@@ -68,6 +45,7 @@ if q:
         st.warning("Produto não encontrado")
     else:
         for _, row in resultado.iterrows():
+            # --- EXIBE INFORMAÇÕES ---
             st.markdown(f"""
             <div class="card">
             <h2>{row['NOME_PRODUTO']}</h2>
@@ -79,23 +57,24 @@ if q:
             </div>
             """, unsafe_allow_html=True)
 
-            # --- FORMULÁRIO DE EDIÇÃO ---
-            with st.form(f"editar_{row['ID_PRODUTO']}"):
-                st.subheader("Atualizar endereço do produto")
-                zona = st.text_input("Zona", value=row['ZONA'], key=f"zona_{row['ID_PRODUTO']}")
-                corredor = st.text_input("Corredor", value=row['CORREDOR'], key=f"corredor_{row['ID_PRODUTO']}")
-                fila = st.text_input("Fila", value=row['FILA'], key=f"fila_{row['ID_PRODUTO']}")
-                posicao = st.text_input("Posição", value=row['POSICAO'], key=f"posicao_{row['ID_PRODUTO']}")
-                senha = st.text_input("Senha", type="password", key=f"senha_{row['ID_PRODUTO']}")
-                
-                atualizar = st.form_submit_button("Atualizar endereço")  # Só atualiza ao clicar
+            # --- BOTÃO EDITAR ---
+            if st.button(f"Editar {row['ID_PRODUTO']}", key=f"editar_{row['ID_PRODUTO']}"):
+                with st.form(f"form_{row['ID_PRODUTO']}"):
+                    st.subheader("Atualizar endereço do produto")
+                    zona = st.text_input("Zona", value=row['ZONA'], key=f"zona_{row['ID_PRODUTO']}")
+                    corredor = st.text_input("Corredor", value=row['CORREDOR'], key=f"corredor_{row['ID_PRODUTO']}")
+                    fila = st.text_input("Fila", value=row['FILA'], key=f"fila_{row['ID_PRODUTO']}")
+                    posicao = st.text_input("Posição", value=row['POSICAO'], key=f"posicao_{row['ID_PRODUTO']}")
+                    senha = st.text_input("Senha", type="password", key=f"senha_{row['ID_PRODUTO']}")
 
-                if atualizar:
-                    if senha != SENHA_ADMIN:
-                        st.error("Senha incorreta")
-                    else:
-                        df.loc[df["ID_PRODUTO"] == row["ID_PRODUTO"],
-                               ["ZONA","CORREDOR","FILA","POSICAO"]] = [
-                               zona, corredor, fila, posicao]
-                        salvar_dados(df)
-                        st.success("Endereço atualizado com sucesso!")
+                    atualizar = st.form_submit_button("Atualizar endereço")
+
+                    if atualizar:
+                        if senha != SENHA_ADMIN:
+                            st.error("Senha incorreta")
+                        else:
+                            df.loc[df["ID_PRODUTO"] == row["ID_PRODUTO"],
+                                   ["ZONA","CORREDOR","FILA","POSICAO"]] = [
+                                   zona, corredor, fila, posicao]
+                            salvar_dados(df)
+                            st.success("Endereço atualizado com sucesso!")
