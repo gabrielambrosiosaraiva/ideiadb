@@ -28,8 +28,8 @@ body {background-color: #0b0b0b; color: white; font-family: Arial, sans-serif;}
 """, unsafe_allow_html=True)
 
 # --- TÍTULO ---
-st.title("📦 Sistema de Localização de Produtos")
-st.write("Busque e edite produtos facilmente.")
+st.title("📦Ideia Endereçamento")
+st.write("Busque e edite.")
 
 # --- CAMPO DE BUSCA ---
 q = st.text_input("Buscar por código ou nome:")
@@ -59,22 +59,23 @@ if q:
 
             # --- BOTÃO EDITAR ---
             if st.button(f"Editar {row['ID_PRODUTO']}", key=f"editar_{row['ID_PRODUTO']}"):
-                with st.form(f"form_{row['ID_PRODUTO']}"):
-                    st.subheader("Atualizar endereço do produto")
-                    zona = st.text_input("Zona", value=row['ZONA'], key=f"zona_{row['ID_PRODUTO']}")
-                    corredor = st.text_input("Corredor", value=row['CORREDOR'], key=f"corredor_{row['ID_PRODUTO']}")
-                    fila = st.text_input("Fila", value=row['FILA'], key=f"fila_{row['ID_PRODUTO']}")
-                    posicao = st.text_input("Posição", value=row['POSICAO'], key=f"posicao_{row['ID_PRODUTO']}")
-                    senha = st.text_input("Senha", type="password", key=f"senha_{row['ID_PRODUTO']}")
-
-                    atualizar = st.form_submit_button("Atualizar endereço")
-
-                    if atualizar:
-                        if senha != SENHA_ADMIN:
-                            st.error("Senha incorreta")
-                        else:
-                            df.loc[df["ID_PRODUTO"] == row["ID_PRODUTO"],
-                                   ["ZONA","CORREDOR","FILA","POSICAO"]] = [
-                                   zona, corredor, fila, posicao]
-                            salvar_dados(df)
-                            st.success("Endereço atualizado com sucesso!")
+                # --- INPUT DE SENHA ---
+                senha_input = st.text_input("Digite a senha para editar:", type="password", key=f"senha_{row['ID_PRODUTO']}")
+                if senha_input:
+                    if senha_input != SENHA_ADMIN:
+                        st.error("Senha incorreta")
+                    else:
+                        st.success("Senha correta! Agora você pode atualizar o endereço.")
+                        # --- FORMULÁRIO DE EDIÇÃO ---
+                        with st.form(f"form_{row['ID_PRODUTO']}"):
+                            zona = st.text_input("Zona", value=row['ZONA'], key=f"zona_{row['ID_PRODUTO']}")
+                            corredor = st.text_input("Corredor", value=row['CORREDOR'], key=f"corredor_{row['ID_PRODUTO']}")
+                            fila = st.text_input("Fila", value=row['FILA'], key=f"fila_{row['ID_PRODUTO']}")
+                            posicao = st.text_input("Posição", value=row['POSICAO'], key=f"posicao_{row['ID_PRODUTO']}")
+                            atualizar = st.form_submit_button("Atualizar endereço")
+                            if atualizar:
+                                df.loc[df["ID_PRODUTO"] == row["ID_PRODUTO"],
+                                       ["ZONA","CORREDOR","FILA","POSICAO"]] = [
+                                       zona, corredor, fila, posicao]
+                                salvar_dados(df)
+                                st.success("Endereço atualizado com sucesso!")
