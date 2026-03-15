@@ -59,8 +59,14 @@ if q:
             </div>
             """, unsafe_allow_html=True)
 
-            # --- BOTÃO EDITAR ---
-            if st.button(f"Editar {row['ID_PRODUTO']}", key=f"editar_{row['ID_PRODUTO']}"):
+            # --- FLAG PARA MOSTRAR FORMULÁRIO ---
+            if f"editar_{row['ID_PRODUTO']}" not in st.session_state:
+                st.session_state[f"editar_{row['ID_PRODUTO']}"] = False
+
+            if st.button(f"Editar {row['ID_PRODUTO']}", key=f"btn_editar_{row['ID_PRODUTO']}"):
+                st.session_state[f"editar_{row['ID_PRODUTO']}"] = True
+
+            if st.session_state[f"editar_{row['ID_PRODUTO']}"]:
                 senha_input = st.text_input("Digite a senha para editar:", type="password", key=f"senha_{row['ID_PRODUTO']}")
                 if senha_input:
                     if senha_input != SENHA_ADMIN:
@@ -79,3 +85,4 @@ if q:
                                        zona, corredor, fila, posicao]
                                 salvar_dados(df)
                                 st.success("Endereço atualizado com sucesso!")
+                                st.session_state[f"editar_{row['ID_PRODUTO']}"] = False
