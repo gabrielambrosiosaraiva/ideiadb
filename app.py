@@ -9,17 +9,14 @@ SENHA_ADMIN = os.getenv("ADMIN_PASSWORD")  # senha do Streamlit Cloud
 
 # --- FUNÇÕES ---
 def carregar_dados():
-    """Lê o CSV e retorna o DataFrame"""
     if os.path.exists(CSV_FILE):
         return pd.read_csv(CSV_FILE)
     else:
-        # Cria um CSV vazio se não existir
-        df = pd.DataFrame(columns=["ID_PRODUTO", "NOME_PRODUTO", "ZONA", "CORREDOR", "FILA", "POSICAO"])
+        df = pd.DataFrame(columns=["ID_PRODUTO","NOME_PRODUTO","ZONA","CORREDOR","FILA","POSICAO"])
         df.to_csv(CSV_FILE, index=False)
         return df
 
 def salvar_dados(df):
-    """Salva o DataFrame no CSV"""
     df.to_csv(CSV_FILE, index=False)
 
 # --- ESTILO ---
@@ -47,16 +44,15 @@ q = st.text_input("Buscar por código ou nome:")
 resultado = pd.DataFrame()
 if q:
     if q.isdigit():
-        # Busca exata por ID
         resultado = df[df["ID_PRODUTO"].astype(str) == q]
     else:
-        # Busca por nome parcial
         resultado = df[df["NOME_PRODUTO"].str.contains(q, case=False)]
 
     if resultado.empty:
         st.warning("Produto não encontrado")
     else:
         for idx, row in resultado.iterrows():
+            # --- EXIBE INFORMAÇÕES ---
             st.markdown(f"""
             <div class="card">
             <h2>{row['NOME_PRODUTO']}</h2>
@@ -68,9 +64,14 @@ if q:
             </div>
             """, unsafe_allow_html=True)
 
-            # --- BOTÃO EDITAR ---
-            if st.button(f"Editar {row['ID_PRODUTO']}", key=f"editar_{row['ID_PRODUTO']}"):
-                senha_input = st.text_input("Digite a senha para editar:", type="password", key=f"senha_{row['ID_PRODUTO']}")
+            # --- EXPANDER PARA EDIÇÃO ---
+            key_expander = f"expander_{row['ID_PRODUTO']}"
+            with st.expander("Editar endereço", expanded=False, key=key_expander):
+                # --- INPUT DE SENHA ---
+                if f"senha_{row['ID_PRODUTO']}" not in st.session_state:
+                    st.session_state[f"senha_{row['ID_PRODUTO']}"] = ""
+                senha_input = st.text_input("Digite a senha para editar:", type="password",
+                                            key=f"senha_{row['ID_PRODUTO']}")
                 if senha_input:
                     if senha_input != SENHA_ADMIN:
                         st.error("Senha incorreta")
@@ -83,9 +84,10 @@ if q:
                             posicao = st.text_input("Posição", value=row['POSICAO'], key=f"posicao_{row['ID_PRODUTO']}")
                             atualizar = st.form_submit_button("Atualizar endereço")
                             if atualizar:
-                                df.loc[df["ID_PRODUTO"] == row["ID_PRODUTO"], ["ZONA","CORREDOR","FILA","POSICAO"]] = [
+                                df.loc[df["ID_PRODUTO"] == row["ID_PRODUTO"],
+                                       ["ZONA","CORREDOR","FILA","POSICAO"]] = [
                                     zona, corredor, fila, posicao
                                 ]
                                 salvar_dados(df)
                                 st.success("Endereço atualizado com sucesso!")
-                                st.experimental_rerun()  # Recarrega para mostrar as mudanças imediatamente
+                                st.experimental_rerun()
