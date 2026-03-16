@@ -67,11 +67,10 @@ if q:
             # --- EXPANDER PARA EDIÇÃO ---
             key_expander = f"expander_{row['ID_PRODUTO']}"
             with st.expander("Editar endereço", expanded=False, key=key_expander):
-                # --- INPUT DE SENHA ---
-                if f"senha_{row['ID_PRODUTO']}" not in st.session_state:
-                    st.session_state[f"senha_{row['ID_PRODUTO']}"] = ""
-                senha_input = st.text_input("Digite a senha para editar:", type="password",
-                                            key=f"senha_{row['ID_PRODUTO']}")
+                senha_key = f"senha_{row['ID_PRODUTO']}"
+                if senha_key not in st.session_state:
+                    st.session_state[senha_key] = ""
+                senha_input = st.text_input("Digite a senha para editar:", type="password", key=senha_key)
                 if senha_input:
                     if senha_input != SENHA_ADMIN:
                         st.error("Senha incorreta")
@@ -84,10 +83,12 @@ if q:
                             posicao = st.text_input("Posição", value=row['POSICAO'], key=f"posicao_{row['ID_PRODUTO']}")
                             atualizar = st.form_submit_button("Atualizar endereço")
                             if atualizar:
+                                # Atualiza o dataframe atual e salva
                                 df.loc[df["ID_PRODUTO"] == row["ID_PRODUTO"],
                                        ["ZONA","CORREDOR","FILA","POSICAO"]] = [
                                     zona, corredor, fila, posicao
                                 ]
                                 salvar_dados(df)
                                 st.success("Endereço atualizado com sucesso!")
-                                st.experimental_rerun()
+                                # Recarrega os dados para mostrar imediatamente
+                                df = carregar_dados()
