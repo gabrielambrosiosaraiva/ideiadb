@@ -2,12 +2,12 @@ import streamlit as st
 import pandas as pd
 import os
 
-# --- CONFIGURAÇÃO ---
+
 BASE_DIR = os.path.dirname(__file__)
 CSV_FILE = os.path.join(BASE_DIR, "db_ideia.csv")
 SENHA_ADMIN = os.getenv("ADMIN_PASSWORD")  # senha do Streamlit Cloud
 
-# --- FUNÇÕES ---
+
 def carregar_dados():
     if os.path.exists(CSV_FILE):
         return pd.read_csv(CSV_FILE)
@@ -19,7 +19,7 @@ def carregar_dados():
 def salvar_dados(df):
     df.to_csv(CSV_FILE, index=False)
 
-# --- ESTILO ---
+
 st.set_page_config(page_title="Sistema de Estoque", layout="wide")
 st.markdown("""
 <style>
@@ -31,14 +31,14 @@ body {background-color: #0b0b0b; color: white; font-family: Arial, sans-serif;}
 </style>
 """, unsafe_allow_html=True)
 
-# --- TÍTULO ---
+
 st.title("📦 Sistema de Localização de Produtos")
 st.write("Busque e edite produtos facilmente.")
 
-# --- CARREGA DADOS ---
+
 df = carregar_dados()
 
-# --- CAMPO DE BUSCA ---
+
 q = st.text_input("Buscar por código ou nome:")
 
 resultado = pd.DataFrame()
@@ -52,7 +52,7 @@ if q:
         st.warning("Produto não encontrado")
     else:
         for idx, row in resultado.iterrows():
-            # --- EXIBE INFORMAÇÕES ---
+          
             st.markdown(f"""
             <div class="card">
             <h2>{row['NOME_PRODUTO']}</h2>
@@ -64,7 +64,7 @@ if q:
             </div>
             """, unsafe_allow_html=True)
 
-            # --- EXPANDER PARA EDIÇÃO ---
+          
             key_expander = f"expander_{row['ID_PRODUTO']}"
             with st.expander("Editar endereço", expanded=False, key=key_expander):
                 senha_key = f"senha_{row['ID_PRODUTO']}"
@@ -83,12 +83,12 @@ if q:
                             posicao = st.text_input("Posição", value=row['POSICAO'], key=f"posicao_{row['ID_PRODUTO']}")
                             atualizar = st.form_submit_button("Atualizar endereço")
                             if atualizar:
-                                # Atualiza o dataframe atual e salva
+                                
                                 df.loc[df["ID_PRODUTO"] == row["ID_PRODUTO"],
                                        ["ZONA","CORREDOR","FILA","POSICAO"]] = [
                                     zona, corredor, fila, posicao
                                 ]
                                 salvar_dados(df)
                                 st.success("Endereço atualizado com sucesso!")
-                                # Recarrega os dados para mostrar imediatamente
+                                
                                 df = carregar_dados()
