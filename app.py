@@ -95,7 +95,19 @@ if q:
 
 st.header("➕ Adicionar novo produto")
 
-with st.expander("Clique aqui para adicionar um produto"):
+if "mostrar_form" not in st.session_state:
+    st.session_state["mostrar_form"] = False
+
+# Campo de senha
+senha_add = st.text_input("Digite a senha para adicionar produto:", type="password", key="senha_add")
+
+if st.button("Abrir formulário de novo produto"):
+    if senha_add == SENHA_ADMIN:
+        st.session_state["mostrar_form"] = not st.session_state["mostrar_form"]
+    else:
+        st.error("Senha incorreta")
+
+if st.session_state["mostrar_form"]:
     with st.form("form_add_produto"):
         novo_id = st.text_input("ID do Produto")
         novo_nome = st.text_input("Nome do Produto")
@@ -104,7 +116,7 @@ with st.expander("Clique aqui para adicionar um produto"):
         nova_fila = st.text_input("Fila")
         nova_posicao = st.text_input("Posição")
 
-        adicionar = st.form_submit_button("Adicionar produto")
+        adicionar = st.form_submit_button("Salvar produto")
 
         if adicionar:
             if not novo_id or not novo_nome:
@@ -123,6 +135,5 @@ with st.expander("Clique aqui para adicionar um produto"):
                 df = pd.concat([df, pd.DataFrame([novo_produto])], ignore_index=True)
                 salvar_dados(df)
                 st.success(f"Produto '{novo_nome}' adicionado com sucesso!")
-
 
 
