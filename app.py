@@ -1,44 +1,70 @@
 import streamlit as st
 import pandas as pd
 import os
+import requests, base64
+from io import StringIO
 
+# ============================
+# Configurações
+# ============================
+GITHUB_REPO = "gabrielambrosiosaraiva/ideiadb"
+GITHUB_FILE = "db_ideia.csv"
+GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
+SENHA_ADMIN = os.getenv("ADMIN_PASSWORD", "admin")
 
-BASE_DIR = os.path.dirname(__file__)
-CSV_FILE = os.path.join(BASE_DIR, "db_ideia.csv")
-SENHA_ADMIN = os.getenv("ADMIN_PASSWORD")  # senha do Streamlit Cloud
-
-
+# ============================
+# Funções auxiliares
+# ============================
 def carregar_dados():
-    if os.path.exists(CSV_FILE):
-        return pd.read_csv(CSV_FILE)
+    """Carrega CSV do GitHub"""
+    url = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{GITHUB_FILE}"
+    headers = {"Authorization": f"token {GITHUB_TOKEN}"}
+    r = requests.get(url, headers=headers)
+    if r.status_code == 200:
+        content = base64.b64decode(r.json()["content"]).decode()
+        return pd.read_csv(StringIO(content))
     else:
-        df = pd.DataFrame(columns=["ID_PRODUTO","NOME_PRODUTO","ZONA","CORREDOR","FILA","POSICAO"])
-        df.to_csv(CSV_FILE, index=False)
-        return df
+        return pd.DataFrame(columns=["ID_PRODUTO","NOME_PRODUTO","ZONA","CORREDOR","FILA","POSICAO"])
 
 def salvar_dados(df):
-    df.to_csv(CSV_FILE, index=False)
+    """Salva CSV no GitHub (commit via API)"""
+    csv_content = df.to_csv(index=False)
+    b64_content = base64.b64encode(csv_content.encode()).decode()
 
+    url = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{GITHUB_FILE}"
+    headers = {"Authorization": f"token {GITHUB_TOKEN}"}
 
+    # Pega SHA do arquivo atual
+    r = requests.get(url, headers=headers)
+    sha = r.json()["sha"] if r.status_code == 200 else None
+
+    payload = {
+        "message": "Atualização automática do CSV pelo Streamlit",
+        "content": b64_content,
+        "sha": sha
+    }
+
+    r = requests.put(url, json=payload, headers=headers)
+    if r.status_code in [200, 201]:
+        st.success("CSV atualizado no GitHub com sucesso!")
+    else:
+        st.error(f"Erro ao atualizar CSV no GitHub: {r.text}")
+
+# ============================
+# Interface Streamlit
+# ============================
 st.set_page_config(page_title="Sistema de Estoque", layout="wide")
-st.markdown("""
-<style>
-body {background-color: #0b0b0b; color: white; font-family: Arial, sans-serif;}
-.stTextInput>div>div>input {background-color: #1a1a1a; color: white; border-radius:6px; padding:10px;}
-.stButton>button {background-color:#ff7a00; color:black; font-weight:bold; border-radius:6px; padding:10px 20px;}
-.stButton>button:hover {background-color:#ff8c1a;}
-.card {background-color:#161616; padding:20px; margin-top:20px; border-radius:10px; border-left:5px solid #ff7a00;}
-</style>
-""", unsafe_allow_html=True)
-
-
 st.title("📦 Sistema de Localização de Produtos")
-st.write("Busque e edite produtos facilmente.")
-
 
 df = carregar_dados()
 
+# Inicializa lista temporária
+if "novos_produtos" not in st.session_state:
+    st.session_state["novos_produtos"] = []
 
+# ============================
+# Busca de produtos
+# ============================
 q = st.text_input("Buscar por código ou nome:")
 
 resultado = pd.DataFrame()
@@ -46,16 +72,15 @@ if q:
     if q.isdigit():
         resultado = df[df["ID_PRODUTO"].astype(str) == q]
     else:
-        resultado = df[df["NOME_PRODUTO"].str.contains(q, case=False)]
+        resultado = df[df["NOME_PRODUTO"].fillna("").str.contains(q, case=False)]
 
     if resultado.empty:
         st.warning("Produto não encontrado")
     else:
         for idx, row in resultado.iterrows():
-          
             st.markdown(f"""
-            <div class="card">
-            <h2>{row['NOME_PRODUTO']}</h2>
+            <div style="background:#161616;padding:15px;margin-top:10px;border-radius:8px;border-left:5px solid #ff7a00;">
+            <h3>{row['NOME_PRODUTO']}</h3>
             <b>ID:</b> {row['ID_PRODUTO']}<br>
             <b>Zona:</b> {row['ZONA']}<br>
             <b>Corredor:</b> {row['CORREDOR']}<br>
@@ -64,50 +89,43 @@ if q:
             </div>
             """, unsafe_allow_html=True)
 
-          
-            key_expander = f"expander_{row['ID_PRODUTO']}"
-            with st.expander("Editar endereço", expanded=False, key=key_expander):
-                senha_key = f"senha_{row['ID_PRODUTO']}"
-                if senha_key not in st.session_state:
-                    st.session_state[senha_key] = ""
-                senha_input = st.text_input("Digite a senha para editar:", type="password", key=senha_key)
+            with st.expander("Editar endereço", expanded=False):
+                senha_input = st.text_input("Digite a senha para editar:", type="password", key=f"senha_{row['ID_PRODUTO']}")
                 if senha_input:
                     if senha_input != SENHA_ADMIN:
                         st.error("Senha incorreta")
                     else:
-                        st.success("Senha correta! Agora você pode atualizar o endereço.")
                         with st.form(f"form_{row['ID_PRODUTO']}"):
-                            zona = st.text_input("Zona", value=row['ZONA'], key=f"zona_{row['ID_PRODUTO']}")
-                            corredor = st.text_input("Corredor", value=row['CORREDOR'], key=f"corredor_{row['ID_PRODUTO']}")
-                            fila = st.text_input("Fila", value=row['FILA'], key=f"fila_{row['ID_PRODUTO']}")
-                            posicao = st.text_input("Posição", value=row['POSICAO'], key=f"posicao_{row['ID_PRODUTO']}")
+                            zona = st.text_input("Zona", value=row['ZONA'])
+                            corredor = st.text_input("Corredor", value=row['CORREDOR'])
+                            fila = st.text_input("Fila", value=row['FILA'])
+                            posicao = st.text_input("Posição", value=row['POSICAO'])
                             atualizar = st.form_submit_button("Atualizar endereço")
                             if atualizar:
-                                
                                 df.loc[df["ID_PRODUTO"] == row["ID_PRODUTO"],
                                        ["ZONA","CORREDOR","FILA","POSICAO"]] = [
                                     zona, corredor, fila, posicao
                                 ]
                                 salvar_dados(df)
                                 st.success("Endereço atualizado com sucesso!")
-                                
-                                df = carregar_dados()
 
-st.header("➕ Adicionar novo produto")
+# ============================
+# Adicionar novos produtos
+# ============================
+st.header("➕ Adicionar novos produtos")
 
-if "mostrar_form" not in st.session_state:
-    st.session_state["mostrar_form"] = False
+if "logado_add" not in st.session_state:
+    st.session_state["logado_add"] = False
 
-# Campo de senha
-senha_add = st.text_input("Digite a senha para adicionar produto:", type="password", key="senha_add")
-
-if st.button("Abrir formulário de novo produto"):
+if not st.session_state["logado_add"]:
+    senha_add = st.text_input("Digite a senha de administrador:", type="password")
     if senha_add == SENHA_ADMIN:
-        st.session_state["mostrar_form"] = not st.session_state["mostrar_form"]
-    else:
+        st.session_state["logado_add"] = True
+        st.success("Login realizado! Agora você pode adicionar produtos.")
+    elif senha_add:
         st.error("Senha incorreta")
 
-if st.session_state["mostrar_form"]:
+if st.session_state["logado_add"]:
     with st.form("form_add_produto"):
         novo_id = st.text_input("ID do Produto")
         novo_nome = st.text_input("Nome do Produto")
@@ -116,7 +134,7 @@ if st.session_state["mostrar_form"]:
         nova_fila = st.text_input("Fila")
         nova_posicao = st.text_input("Posição")
 
-        adicionar = st.form_submit_button("Salvar produto")
+        adicionar = st.form_submit_button("Adicionar à lista")
 
         if adicionar:
             if not novo_id or not novo_nome:
@@ -132,8 +150,15 @@ if st.session_state["mostrar_form"]:
                     "FILA": nova_fila,
                     "POSICAO": nova_posicao
                 }
-                df = pd.concat([df, pd.DataFrame([novo_produto])], ignore_index=True)
-                salvar_dados(df)
-                st.success(f"Produto '{novo_nome}' adicionado com sucesso!")
+                st.session_state["novos_produtos"].append(novo_produto)
+                st.success(f"Produto '{novo_nome}' adicionado à lista (pendente de salvar).")
 
+# Mostrar lista temporária
+if st.session_state["novos_produtos"]:
+    st.subheader("📋 Produtos adicionados (pendentes de salvar)")
+    st.table(pd.DataFrame(st.session_state["novos_produtos"]))
 
+    if st.button("Salvar alterações no GitHub"):
+        df = pd.concat([df, pd.DataFrame(st.session_state["novos_produtos"])], ignore_index=True)
+        salvar_dados(df)
+        st.session_state["novos_produtos"] = []
