@@ -4,15 +4,12 @@ import os
 import requests, base64
 from io import StringIO
 
-
 GITHUB_REPO = "gabrielambrosiosaraiva/ideiadb"
 GITHUB_FILE = "db_ideia.csv"
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 SENHA_ADMIN = os.getenv("ADMIN_PASSWORD", "admin")
 
-
 def carregar_dados():
-    """Carrega CSV do GitHub"""
     url = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{GITHUB_FILE}"
     headers = {"Authorization": f"token {GITHUB_TOKEN}"}
     r = requests.get(url, headers=headers)
@@ -23,14 +20,12 @@ def carregar_dados():
         return pd.DataFrame(columns=["ID_PRODUTO","NOME_PRODUTO","ZONA","CORREDOR","FILA","POSICAO"])
 
 def salvar_dados(df):
-    """Salva CSV no GitHub (commit via API)"""
     csv_content = df.to_csv(index=False)
     b64_content = base64.b64encode(csv_content.encode()).decode()
 
     url = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{GITHUB_FILE}"
     headers = {"Authorization": f"token {GITHUB_TOKEN}"}
 
-    # Pega SHA do arquivo atual
     r = requests.get(url, headers=headers)
     sha = r.json()["sha"] if r.status_code == 200 else None
 
@@ -46,7 +41,6 @@ def salvar_dados(df):
     else:
         st.error(f"Erro ao atualizar. Contato o Administrador: {r.text}")
 
-
 st.set_page_config(page_title="GPS_Ideia", layout="wide")
 
 st.markdown("""
@@ -54,13 +48,10 @@ st.markdown("""
 <h3 style='text-align: center; color: gray; margin-top: 5px;'>Galpão Position System</h3>
 """, unsafe_allow_html=True)
 
-
 df = carregar_dados()
-
 
 if "novos_produtos" not in st.session_state:
     st.session_state["novos_produtos"] = []
-
 
 q = st.text_input("Buscar por código ou nome:")
 
@@ -76,7 +67,7 @@ if q:
     else:
         for idx, row in resultado.iterrows():
             st.markdown(f"""
-            <div style="background:#161616;padding:15px;margin-top:10px;border-radius:8px;border-left:5px solid #ff7a00;">
+            <div style="background:#161616;color:white;padding:15px;margin-top:10px;border-radius:8px;border-left:5px solid #ff7a00;">
             <h3>{row['NOME_PRODUTO']}</h3>
             <b>ID:</b> {row['ID_PRODUTO']}<br>
             <b>Zona:</b> {row['ZONA']}<br>
@@ -106,8 +97,6 @@ if q:
                                 salvar_dados(df)
                                 st.success("Endereço atualizado com sucesso!")
 
-
-
 col1, col2 = st.columns([3,1])
 with col1:
     st.markdown("""
@@ -120,7 +109,6 @@ with col2:
             salvar_dados(df)
             st.session_state["novos_produtos"] = []
             st.success("Alterações salvas!")
-
 
 if "logado_add" not in st.session_state:
     st.session_state["logado_add"] = False
@@ -160,7 +148,6 @@ if st.session_state["logado_add"]:
                 }
                 st.session_state["novos_produtos"].append(novo_produto)
                 st.success(f"Produto '{novo_nome}' adicionado à lista (pendente de salvar).")
-
 
 if st.session_state["novos_produtos"]:
     st.subheader("📋 Produtos adicionados (pendentes)")
