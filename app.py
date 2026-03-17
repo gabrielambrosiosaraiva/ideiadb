@@ -4,17 +4,13 @@ import os
 import requests, base64
 from io import StringIO
 
-# ============================
-# Configurações
-# ============================
+
 GITHUB_REPO = "gabrielambrosiosaraiva/ideiadb"
 GITHUB_FILE = "db_ideia.csv"
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 SENHA_ADMIN = os.getenv("ADMIN_PASSWORD", "admin")
 
-# ============================
-# Funções auxiliares
-# ============================
+
 def carregar_dados():
     """Carrega CSV do GitHub"""
     url = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{GITHUB_FILE}"
@@ -46,25 +42,21 @@ def salvar_dados(df):
 
     r = requests.put(url, json=payload, headers=headers)
     if r.status_code in [200, 201]:
-        st.success("CSV atualizado no GitHub com sucesso!")
+        st.success("Atualizado com sucesso!")
     else:
-        st.error(f"Erro ao atualizar CSV no GitHub: {r.text}")
+        st.error(f"Erro ao atualizar. Contato o Administrador: {r.text}")
 
-# ============================
-# Interface Streamlit
-# ============================
-st.set_page_config(page_title="Sistema de Estoque", layout="wide")
-st.title("📦 Sistema de Localização de Produtos")
+
+st.set_page_config(page_title="GPS_Ideia", layout="wide")
+st.title("📦 Galpão Position System Ideia")
 
 df = carregar_dados()
 
-# Inicializa lista temporária
+
 if "novos_produtos" not in st.session_state:
     st.session_state["novos_produtos"] = []
 
-# ============================
-# Busca de produtos
-# ============================
+
 q = st.text_input("Buscar por código ou nome:")
 
 resultado = pd.DataFrame()
@@ -109,9 +101,8 @@ if q:
                                 salvar_dados(df)
                                 st.success("Endereço atualizado com sucesso!")
 
-# ============================
-# Adicionar novos produtos
-# ============================
+
+
 col1, col2 = st.columns([3,1])
 with col1:
     st.header("➕ Novos produtos")
@@ -121,7 +112,7 @@ with col2:
             df = pd.concat([df, pd.DataFrame(st.session_state["novos_produtos"])], ignore_index=True)
             salvar_dados(df)
             st.session_state["novos_produtos"] = []
-            st.success("Alterações salvas no GitHub!")
+            st.success("Alterações salvas!")
 
 if "logado_add" not in st.session_state:
     st.session_state["logado_add"] = False
@@ -162,7 +153,7 @@ if st.session_state["logado_add"]:
                 st.session_state["novos_produtos"].append(novo_produto)
                 st.success(f"Produto '{novo_nome}' adicionado à lista (pendente de salvar).")
 
-# Mostrar lista temporária
+
 if st.session_state["novos_produtos"]:
     st.subheader("📋 Produtos adicionados (pendentes)")
     st.table(pd.DataFrame(st.session_state["novos_produtos"]))
