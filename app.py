@@ -112,13 +112,22 @@ if q:
 # ============================
 # Adicionar novos produtos
 # ============================
-st.header("➕ Adicionar novos produtos")
+col1, col2 = st.columns([3,1])
+with col1:
+    st.header("➕ Novos produtos")
+with col2:
+    if st.session_state["novos_produtos"]:
+        if st.button("💾 Salvar alterações"):
+            df = pd.concat([df, pd.DataFrame(st.session_state["novos_produtos"])], ignore_index=True)
+            salvar_dados(df)
+            st.session_state["novos_produtos"] = []
+            st.success("Alterações salvas no GitHub!")
 
 if "logado_add" not in st.session_state:
     st.session_state["logado_add"] = False
 
 if not st.session_state["logado_add"]:
-    senha_add = st.text_input("Digite a senha de administrador:", type="password")
+    senha_add = st.text_input("Senha de administrador:", type="password")
     if senha_add == SENHA_ADMIN:
         st.session_state["logado_add"] = True
         st.success("Login realizado! Agora você pode adicionar produtos.")
@@ -155,10 +164,5 @@ if st.session_state["logado_add"]:
 
 # Mostrar lista temporária
 if st.session_state["novos_produtos"]:
-    st.subheader("📋 Produtos adicionados (pendentes de salvar)")
+    st.subheader("📋 Produtos adicionados (pendentes)")
     st.table(pd.DataFrame(st.session_state["novos_produtos"]))
-
-    if st.button("Salvar alterações no GitHub"):
-        df = pd.concat([df, pd.DataFrame(st.session_state["novos_produtos"])], ignore_index=True)
-        salvar_dados(df)
-        st.session_state["novos_produtos"] = []
