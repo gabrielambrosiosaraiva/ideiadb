@@ -48,7 +48,12 @@ def salvar_dados(df):
 
 
 st.set_page_config(page_title="GPS_Ideia", layout="wide")
-st.title("📦 Galpão Position System Ideia")
+
+st.markdown("""
+<h1 style='text-align: center; font-size: 60px; margin-bottom: 0;'>📦 GPS_Ideia</h1>
+<h3 style='text-align: center; color: gray; margin-top: 5px;'>Galpão Position System</h3>
+""", unsafe_allow_html=True)
+
 
 df = carregar_dados()
 
