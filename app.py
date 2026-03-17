@@ -94,33 +94,5 @@ if q:
                                 df = carregar_dados()
 
 
-st.header("➕ Adicionar novo produto")
 
-with st.form("form_add_produto"):
-    novo_id = st.text_input("ID do Produto")
-    novo_nome = st.text_input("Nome do Produto")
-    nova_zona = st.text_input("Zona")
-    novo_corredor = st.text_input("Corredor")
-    nova_fila = st.text_input("Fila")
-    nova_posicao = st.text_input("Posição")
-
-    adicionar = st.form_submit_button("Adicionar produto")
-
-    if adicionar:
-        if not novo_id or not novo_nome:
-            st.error("ID e Nome do produto são obrigatórios.")
-        elif novo_id in df["ID_PRODUTO"].astype(str).values:
-            st.error("Já existe um produto com esse ID.")
-        else:
-            novo_produto = {
-                "ID_PRODUTO": novo_id,
-                "NOME_PRODUTO": novo_nome,
-                "ZONA": nova_zona,
-                "CORREDOR": novo_corredor,
-                "FILA": nova_fila,
-                "POSICAO": nova_posicao
-            }
-            df = pd.concat([df, pd.DataFrame([novo_produto])], ignore_index=True)
-            salvar_dados(df)
-            st.success(f"Produto '{novo_nome}' adicionado com sucesso!")
 
