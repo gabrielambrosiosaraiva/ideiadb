@@ -110,7 +110,9 @@ if q:
 
 col1, col2 = st.columns([3,1])
 with col1:
-    st.header("➕ Novos produtos")
+    st.markdown("""
+    <h4 style='margin-bottom:0;'>➕ Novos produtos</h4>
+    """, unsafe_allow_html=True)
 with col2:
     if st.session_state["novos_produtos"]:
         if st.button("💾 Salvar alterações"):
@@ -118,6 +120,7 @@ with col2:
             salvar_dados(df)
             st.session_state["novos_produtos"] = []
             st.success("Alterações salvas!")
+
 
 if "logado_add" not in st.session_state:
     st.session_state["logado_add"] = False
