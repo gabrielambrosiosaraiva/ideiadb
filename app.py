@@ -100,7 +100,7 @@ if q or busca_corredor or busca_fila:
             """, unsafe_allow_html=True)
 
             with st.expander("Editar endereço", expanded=False):
-                senha_input = st.text_input("Digite a senha para editar:", type="password", key=f"senha_{row['ID_PRODUTO']}")
+                senha_input = st.text_input("Digite a senha para editar:", type="password", key=f"senha_{row['ID_PRODUTO']}_{idx}")
                 if senha_input:
                     if senha_input != SENHA_ADMIN:
                         st.error("Senha incorreta")
