@@ -139,12 +139,14 @@ with col1:
     <h4 style='margin-bottom:0;'>➕ Novos produtos</h4>
     """, unsafe_allow_html=True)
 with col2:
-    if st.session_state["novos_produtos"]:
-        if st.button("💾 Salvar alterações"):
+    if st.button("💾 Salvar alterações"):
+        if st.session_state["novos_produtos"]:
             df = pd.concat([df, pd.DataFrame(st.session_state["novos_produtos"])], ignore_index=True)
             salvar_dados(df)
             st.session_state["novos_produtos"] = []
             st.success("Alterações salvas!")
+        else:
+            st.warning("Não há produtos para salvar.")
 
 if "logado_add" not in st.session_state:
     st.session_state["logado_add"] = False
