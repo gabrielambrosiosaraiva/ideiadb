@@ -89,28 +89,28 @@ if q or busca_corredor or busca_fila:
     else:
         for idx, row in resultado.iterrows():
 
-    if busca_fila:
-        st.markdown(f"""
-        <div style="background:#1e1e1e;color:white;padding:8px;margin-top:5px;border-radius:6px;border-left:3px solid #ff7a00;font-size:13px;">
-        <b>{row['NOME_PRODUTO']}</b> | 
-        ID: {row['ID_PRODUTO']} | 
-        Z: {row['ZONA']} | 
-        C: {row['CORREDOR']} | 
-        F: {row['FILA']} | 
-        P: {row['POSICAO']}
-        </div>
-        """, unsafe_allow_html=True)
-    else:
-        st.markdown(f"""
-        <div style="background:#161616;color:white;padding:15px;margin-top:10px;border-radius:8px;border-left:5px solid #ff7a00;">
-        <h3>{row['NOME_PRODUTO']}</h3>
-        <b>ID:</b> {row['ID_PRODUTO']}<br>
-        <b>Zona:</b> {row['ZONA']}<br>
-        <b>Corredor:</b> {row['CORREDOR']}<br>
-        <b>Fila:</b> {row['FILA']}<br>
-        <b>Posição:</b> {row['POSICAO']}<br>
-        </div>
-        """, unsafe_allow_html=True)
+            if busca_fila:
+                st.markdown(f"""
+                <div style="background:#1e1e1e;color:white;padding:8px;margin-top:5px;border-radius:6px;border-left:3px solid #ff7a00;font-size:13px;">
+                <b>{row['NOME_PRODUTO']}</b> | 
+                ID: {row['ID_PRODUTO']} | 
+                Z: {row['ZONA']} | 
+                C: {row['CORREDOR']} | 
+                F: {row['FILA']} | 
+                P: {row['POSICAO']}
+                </div>
+                """, unsafe_allow_html=True)
+            else:
+                st.markdown(f"""
+                <div style="background:#161616;color:white;padding:15px;margin-top:10px;border-radius:8px;border-left:5px solid #ff7a00;">
+                <h3>{row['NOME_PRODUTO']}</h3>
+                <b>ID:</b> {row['ID_PRODUTO']}<br>
+                <b>Zona:</b> {row['ZONA']}<br>
+                <b>Corredor:</b> {row['CORREDOR']}<br>
+                <b>Fila:</b> {row['FILA']}<br>
+                <b>Posição:</b> {row['POSICAO']}<br>
+                </div>
+                """, unsafe_allow_html=True)
 
             with st.expander("Editar endereço", expanded=False):
                 senha_input = st.text_input("Digite a senha para editar:", type="password", key=f"senha_{row['ID_PRODUTO']}_{idx}")
