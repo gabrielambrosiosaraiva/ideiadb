@@ -15,7 +15,8 @@ def carregar_dados():
     r = requests.get(url, headers=headers)
     if r.status_code == 200:
         content = base64.b64decode(r.json()["content"]).decode()
-        return pd.read_csv(StringIO(content))
+        df = pd.read_csv(StringIO(content))
+        return df.astype(str)
     else:
         return pd.DataFrame(columns=["ID_PRODUTO","NOME_PRODUTO","ZONA","CORREDOR","FILA","POSICAO"])
 
@@ -73,15 +74,15 @@ else:
 
     if q:
         if q.isdigit():
-            resultado = resultado[resultado["ID_PRODUTO"].astype(str) == q]
+            resultado = resultado[resultado["ID_PRODUTO"] == q]
         else:
-            resultado = resultado[resultado["NOME_PRODUTO"].fillna("").str.contains(q, case=False)]
+            resultado = resultado[resultado["NOME_PRODUTO"].str.contains(q, case=False, na=False)]
 
     if busca_corredor:
-        resultado = resultado[resultado["CORREDOR"].fillna("").str.contains(busca_corredor, case=False)]
+        resultado = resultado[resultado["CORREDOR"].str.contains(busca_corredor, case=False, na=False)]
 
     if busca_fila:
-        resultado = resultado[resultado["FILA"].fillna("").str.contains(busca_fila, case=False)]
+        resultado = resultado[resultado["FILA"].str.contains(busca_fila, case=False, na=False)]
 
 if q or busca_corredor or busca_fila:
     if resultado.empty:
@@ -170,7 +171,7 @@ if st.session_state["logado_add"]:
         if adicionar:
             if not novo_id or not novo_nome:
                 st.error("ID e Nome do produto são obrigatórios.")
-            elif novo_id in df["ID_PRODUTO"].astype(str).values:
+            elif novo_id in df["ID_PRODUTO"].values:
                 st.error("Já existe um produto com esse ID.")
             else:
                 novo_produto = {
