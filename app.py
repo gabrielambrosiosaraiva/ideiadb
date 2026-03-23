@@ -53,15 +53,37 @@ df = carregar_dados()
 if "novos_produtos" not in st.session_state:
     st.session_state["novos_produtos"] = []
 
-q = st.text_input("Buscar por código ou nome:")
+col_busca1, col_busca2, col_busca3 = st.columns(3)
+
+with col_busca1:
+    q = st.text_input("Buscar por código ou nome:")
+
+with col_busca2:
+    busca_corredor = st.text_input("Corredor:")
+
+with col_busca3:
+    busca_fila = st.text_input("Fila:")
 
 resultado = pd.DataFrame()
-if q:
-    if q.isdigit():
-        resultado = df[df["ID_PRODUTO"].astype(str) == q]
-    else:
-        resultado = df[df["NOME_PRODUTO"].fillna("").str.contains(q, case=False)]
 
+if busca_fila and not busca_corredor:
+    st.warning("Para buscar por fila, informe também o corredor.")
+else:
+    resultado = df.copy()
+
+    if q:
+        if q.isdigit():
+            resultado = resultado[resultado["ID_PRODUTO"].astype(str) == q]
+        else:
+            resultado = resultado[resultado["NOME_PRODUTO"].fillna("").str.contains(q, case=False)]
+
+    if busca_corredor:
+        resultado = resultado[resultado["CORREDOR"].fillna("").str.contains(busca_corredor, case=False)]
+
+    if busca_fila:
+        resultado = resultado[resultado["FILA"].fillna("").str.contains(busca_fila, case=False)]
+
+if q or busca_corredor or busca_fila:
     if resultado.empty:
         st.warning("Produto não encontrado")
     else:
@@ -103,14 +125,12 @@ with col1:
     <h4 style='margin-bottom:0;'>➕ Novos produtos</h4>
     """, unsafe_allow_html=True)
 with col2:
-    if st.button("💾 Salvar alterações"):
-        if st.session_state["novos_produtos"]:
+    if st.session_state["novos_produtos"]:
+        if st.button("💾 Salvar alterações"):
             df = pd.concat([df, pd.DataFrame(st.session_state["novos_produtos"])], ignore_index=True)
             salvar_dados(df)
             st.session_state["novos_produtos"] = []
             st.success("Alterações salvas!")
-        else:
-            st.warning("Não há produtos para salvar.")
 
 if "logado_add" not in st.session_state:
     st.session_state["logado_add"] = False
