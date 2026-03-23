@@ -90,7 +90,7 @@ if q or busca_corredor or busca_fila:
     else:
         for idx, row in resultado.iterrows():
 
-            if busca_fila:
+            if busca_fila or busca_corredor:
                 st.markdown(f"""
                 <div style="background:#1e1e1e;color:white;padding:8px;margin-top:5px;border-radius:6px;border-left:3px solid #ff7a00;font-size:13px;">
                 <b>{row['NOME_PRODUTO']}</b> | 
