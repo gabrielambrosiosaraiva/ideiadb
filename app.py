@@ -62,12 +62,12 @@ with col_busca2:
     busca_corredor = st.text_input("Corredor:")
 
 with col_busca3:
-    busca_fila = st.text_input("Fila:")
+    busca_posicao = st.text_input("Posição:")
 
 resultado = pd.DataFrame()
 
-if busca_fila and not busca_corredor:
-    st.warning("Para buscar por fila, informe também o corredor.")
+if busca_posicao and not busca_corredor:
+    st.warning("Para buscar por posição, informe também o corredor.")
 else:
     resultado = df.copy()
 
@@ -80,16 +80,16 @@ else:
     if busca_corredor:
         resultado = resultado[resultado["CORREDOR"].fillna("").str.contains(busca_corredor, case=False)]
 
-    if busca_fila:
-        resultado = resultado[resultado["FILA"].fillna("").str.contains(busca_fila, case=False)]
+    if busca_posicao:
+        resultado = resultado[resultado["POSICAO"].fillna("").str.contains(busca_posicao, case=False)]
 
-if q or busca_corredor or busca_fila:
+if q or busca_corredor or busca_posicao:
     if resultado.empty:
         st.warning("Produto não encontrado")
     else:
         for idx, row in resultado.iterrows():
 
-            if busca_fila:
+            if busca_posicao:
                 st.markdown(f"""
                 <div style="background:#1e1e1e;color:white;padding:8px;margin-top:5px;border-radius:6px;border-left:3px solid #ff7a00;font-size:13px;">
                 <b>{row['NOME_PRODUTO']}</b> | 
