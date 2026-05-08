@@ -12,13 +12,34 @@ SENHA_ADMIN = os.getenv("ADMIN_PASSWORD", "admin")
 def carregar_dados():
     url = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{GITHUB_FILE}"
     headers = {"Authorization": f"token {GITHUB_TOKEN}"}
+
     r = requests.get(url, headers=headers)
+
     if r.status_code == 200:
         content = base64.b64decode(r.json()["content"]).decode()
-        df = pd.read_csv(StringIO(content))
-        return df.astype(str)
+
+        
+        df = pd.read_csv(StringIO(content), dtype=str)
+
+        
+        df = df.fillna("")
+
+        
+        df = df.map(
+            lambda x: str(x).replace(".0", "") if pd.notnull(x) else ""
+        )
+
+        return df
+
     else:
-        return pd.DataFrame(columns=["ID_PRODUTO","NOME_PRODUTO","ZONA","CORREDOR","FILA","POSICAO"])
+        return pd.DataFrame(columns=[
+            "ID_PRODUTO",
+            "NOME_PRODUTO",
+            "ZONA",
+            "CORREDOR",
+            "FILA",
+            "POSICAO"
+        ])
 
 def salvar_dados(df):
     csv_content = df.to_csv(index=False)
